@@ -10,9 +10,9 @@ const int IN1 = 7, IN2 = 8, ENA = 6;
 const int IN3 = 10, IN4 = 11, ENB = 9;  
 const int IRPIN = 12;
 
-double Kp = 25, Ki = 120, Kd = 1.2; 
-double input = 0, output = 0, setpoint = 0;
-double OG_setpoint = 0;
+double Kp = 20, Ki =40, Kd = 0.5; 
+double input = 0, output = 0, setpoint = -0.5;
+double OG_setpoint = -0.5;
 double turnOffset = 0; 
 const int turnSpeed = 20;
 bool hold_button = false;
@@ -70,22 +70,22 @@ void moveMotors(double speed)
   double rightSpeed = speed - turnOffset;
 
   if (leftSpeed > 0) {
-    digitalWrite(IN1, HIGH); 
-    digitalWrite(IN2, LOW);
-    leftSpeed = (leftSpeed + minPWM) * 1.32;
-  } else {
     digitalWrite(IN1, LOW); 
     digitalWrite(IN2, HIGH);
-    leftSpeed = (abs(leftSpeed) + minPWM) * 1.32;
+    leftSpeed = (leftSpeed + minPWM)*1.32;
+  } else {
+    digitalWrite(IN1, HIGH); 
+    digitalWrite(IN2, LOW);
+    leftSpeed = (abs(leftSpeed) + minPWM)*1.32;
   }
 
   if (rightSpeed > 0) {
-    digitalWrite(IN3, HIGH); 
-    digitalWrite(IN4, LOW);
-    rightSpeed = rightSpeed + minPWM;
-  } else {
     digitalWrite(IN3, LOW); 
     digitalWrite(IN4, HIGH);
+    rightSpeed = rightSpeed + minPWM;
+  } else {
+    digitalWrite(IN3, HIGH); 
+    digitalWrite(IN4, LOW);
     rightSpeed = abs(rightSpeed) + minPWM;
   }
 
@@ -123,12 +123,12 @@ void setup() {
   mpu.initialize();
 
   if (mpu.dmpInitialize() == 0) {    
-    mpu.setXAccelOffset(-5780); 
-    mpu.setYAccelOffset(-6482);
-    mpu.setZAccelOffset(12314);
-    mpu.setXGyroOffset(-24); 
-    mpu.setYGyroOffset(61);  
-    mpu.setZGyroOffset(-8);
+    mpu.setXAccelOffset(-326); 
+    mpu.setYAccelOffset(888);
+    mpu.setZAccelOffset(1576);
+    mpu.setXGyroOffset(71); 
+    mpu.setYGyroOffset(-29);  
+    mpu.setZGyroOffset(-41);
     
     mpu.setDMPEnabled(true);
 
@@ -167,21 +167,21 @@ void loop() {
       mpu.dmpGetGravity(&gravity, &q);
       mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
       
-      input = ypr[1] * 180 / M_PI; 
+      input = ypr[2] * 180 / M_PI; 
       
       if (abs(input) > 45) {
         stopMotors();
       } else {
         pid.Compute();
         output = (abs(output) < 1) ? 0 : output;
-        driveMotors(output);
+        moveMotors(output);
       }
   
       if (debug) {
         static unsigned long lastPrint;
         if (millis() - lastPrint > 100) {
           Serial.print("In:"); Serial.print(input);
-          Serial.print(" Out:"); Serial.println(PIDoutput);
+          Serial.print(" Out:"); Serial.println(output);
           lastPrint = millis();
         }
       }
