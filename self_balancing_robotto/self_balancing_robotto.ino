@@ -10,11 +10,11 @@ const int IN1 = 7, IN2 = 8, ENA = 6;
 const int IN3 = 10, IN4 = 11, ENB = 9;  
 const int IRPIN = 12;
 
-double Kp = 20, Ki =40, Kd = 0.5; 
-double input = 0, output = 0, setpoint = -0.5;
-double OG_setpoint = -0.5;
+double Kp = 17 ,Ki = 230, Kd =1.5; 
+double input = 0, output = 0, setpoint = -1.25;
+double OG_setpoint = -1.25;
 double turnOffset = 0; 
-const int turnSpeed = 20;
+const int turnSpeed = 30;
 bool hold_button = false;
 long hold_button_timer = 0;
 
@@ -37,25 +37,25 @@ void setDirection(unsigned int direction) {
   hold_button_timer = millis();
 
   switch (direction) {
-    case 24: 
-      setpoint = OG_setpoint + 0.5;
+    case 0x40: 
+      setpoint = OG_setpoint + 2;
       turnOffset = 0;
       break;
 
-    case 82: 
-      setpoint = OG_setpoint - 0.5;
+    case 0x41: 
+      setpoint = OG_setpoint - 1.5;
       turnOffset = 0;
       break;
 
-    case 8: 
-      turnOffset = -turnSpeed;
-      break;
-
-    case 90: 
+    case 0x7: 
       turnOffset = turnSpeed;
       break;
 
-    case 28: 
+    case 0x6: 
+      turnOffset = -turnSpeed;
+      break;
+
+    case 0x44: 
     default:
       setpoint = OG_setpoint;
       turnOffset = 0;
@@ -65,18 +65,18 @@ void setDirection(unsigned int direction) {
 
 void moveMotors(double speed)
 {
-  int minPWM = 50; 
+  int minPWM = 25; 
   double leftSpeed = speed + turnOffset;
   double rightSpeed = speed - turnOffset;
 
   if (leftSpeed > 0) {
     digitalWrite(IN1, LOW); 
     digitalWrite(IN2, HIGH);
-    leftSpeed = (leftSpeed + minPWM)*1.32;
+    leftSpeed = (leftSpeed + minPWM)*1.2;
   } else {
     digitalWrite(IN1, HIGH); 
     digitalWrite(IN2, LOW);
-    leftSpeed = (abs(leftSpeed) + minPWM)*1.32;
+    leftSpeed = (abs(leftSpeed) + minPWM)*1.2;
   }
 
   if (rightSpeed > 0) {
@@ -89,8 +89,8 @@ void moveMotors(double speed)
     rightSpeed = abs(rightSpeed) + minPWM;
   }
 
-  analogWrite(ENA, constrain((int)leftSpeed, 85, 255));
-  analogWrite(ENB, constrain((int)rightSpeed, 68, 255));
+  analogWrite(ENA, constrain((int)leftSpeed, 0, 255));
+  analogWrite(ENB, constrain((int)rightSpeed, 0, 255));
 }
 
 void stopMotors() {
@@ -137,7 +137,7 @@ void setup() {
     packetSize = mpu.dmpGetFIFOPacketSize();
     
     pid.SetMode(AUTOMATIC);
-    pid.SetOutputLimits(-255, 255);
+    pid.SetOutputLimits(-250, 250);
     pid.SetSampleTime(10);
     
     IrReceiver.begin(IRPIN, DISABLE_LED_FEEDBACK);
